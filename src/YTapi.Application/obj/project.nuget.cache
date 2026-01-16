@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "HClVFb16su8=",
+  "success": true,
+  "projectFilePath": "/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/YTapi.Application.csproj",
+  "expectedPackageFiles": [
+    "/Users/octaviogomez/.nuget/packages/fluentvalidation/11.9.0/fluentvalidation.11.9.0.nupkg.sha512",
+    "/Users/octaviogomez/.nuget/packages/fluentvalidation.dependencyinjectionextensions/11.9.0/fluentvalidation.dependencyinjectionextensions.11.9.0.nupkg.sha512",
+    "/Users/octaviogomez/.nuget/packages/mediatr/12.2.0/mediatr.12.2.0.nupkg.sha512",
+    "/Users/octaviogomez/.nuget/packages/mediatr.contracts/2.0.1/mediatr.contracts.2.0.1.nupkg.sha512",
+    "/Users/octaviogomez/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.0/microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
+    "/Users/octaviogomez/.nuget/packages/microsoft.extensions.logging.abstractions/8.0.0/microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
