@@ -27,7 +27,6 @@ x86/
 
 # Secrets - IMPORTANTE
 appsettings.Development.json
-appsettings.Production.json
 *.pfx
 *.p12
 secrets.json
