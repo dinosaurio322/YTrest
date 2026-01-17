@@ -4,6 +4,7 @@ using YTapi.Application.Commands.Downloads;
 using YTapi.Application.DTOs.Requests;
 using YTapi.Application.DTOs.Responses;
 using YTapi.Application.Queries.Downloads;
+using YTapi.Domain.Common;
 
 namespace YTapi.Api.Controllers;
 
@@ -117,6 +118,62 @@ public class DownloadsController : ControllerBase
         return Accepted(result.Value);
     }
 
+
+
+    /// <summary>
+    /// Download an artist's top tracks (ZIP file).
+    /// </summary>
+    /// <param name="request">Artist download request</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Download job information</returns>
+    /// <response code="202">Job created successfully</response>
+    /// <response code="400">Invalid request</response>
+    /// <response code="404">Artist not found</response>
+    [HttpPost("artist")]
+    [ProducesResponseType(typeof(DownloadJobResponse), StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DownloadArtist(
+        [FromBody] DownloadArtistRequest request,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation(
+            "Download artist request received for Spotify ID: {SpotifyId}",
+            request.SpotifyId);
+
+        var command = new DownloadArtistCommand(request.SpotifyId);
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            var error = result.Error!;
+
+            return error.Type switch
+            {
+                ErrorType.NotFound => NotFound(new ProblemDetails
+                {
+                    Title = "Artist Not Found",
+                    Detail = error.Message,
+                    Status = StatusCodes.Status404NotFound
+                }),
+                ErrorType.Validation => BadRequest(new ProblemDetails
+                {
+                    Title = "Validation Error",
+                    Detail = error.Message,
+                    Status = StatusCodes.Status400BadRequest
+                }),
+                _ => StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
+                {
+                    Title = "Download Failed",
+                    Detail = error.Message,
+                    Status = StatusCodes.Status500InternalServerError
+                })
+            };
+        }
+
+        return Accepted(result.Value);
+    }
+
     /// <summary>
     /// Get the status of a download job
     /// </summary>
@@ -159,6 +216,7 @@ public class DownloadsController : ControllerBase
     public async Task<IActionResult> DownloadFile(
         Guid jobId,
         CancellationToken cancellationToken)
+
     {
         _logger.LogInformation("Download file request for job: {JobId}", jobId);
 
@@ -207,4 +265,5 @@ public class DownloadsController : ControllerBase
 
         return File(fileResult.Value!, contentType, fileName);
     }
+
 }

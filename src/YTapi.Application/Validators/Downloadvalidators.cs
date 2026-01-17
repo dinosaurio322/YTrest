@@ -127,3 +127,40 @@ public sealed class SearchSpotifyRequestValidator : AbstractValidator<SearchSpot
             .WithMessage("Search type must be 'track', 'album', or 'artist'");
     }
 }
+/// <summary>
+/// Validator for DownloadArtistCommand.
+/// </summary>
+public sealed class DownloadArtistCommandValidator : AbstractValidator<DownloadArtistCommand>
+{
+    public DownloadArtistCommandValidator()
+    {
+        RuleFor(x => x.SpotifyId)
+            .NotEmpty()
+            .WithMessage("Spotify artist ID is required")
+            .Length(22)
+            .WithMessage("Spotify ID must be exactly 22 characters")
+            .Matches("^[a-zA-Z0-9]+$")
+            .WithMessage("Spotify ID must contain only alphanumeric characters");
+    }
+}
+
+/// <summary>
+/// Validator for DownloadArtistRequest DTO.
+/// </summary>
+public sealed class DownloadArtistRequestValidator : AbstractValidator<DownloadArtistRequest>
+{
+    public DownloadArtistRequestValidator()
+    {
+        RuleFor(x => x.SpotifyId)
+            .NotEmpty()
+            .WithMessage("Spotify artist ID is required")
+            .Length(22)
+            .WithMessage("Spotify ID must be exactly 22 characters")
+            .Matches("^[a-zA-Z0-9]+$")
+            .WithMessage("Spotify ID must contain only alphanumeric characters");
+
+        RuleFor(x => x.Limit)
+            .InclusiveBetween(1, 10)
+            .WithMessage("Limit must be between 1 and 10");
+    }
+}

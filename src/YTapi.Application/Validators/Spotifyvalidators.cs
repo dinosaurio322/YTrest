@@ -104,3 +104,23 @@ public sealed class SearchSpotifyArtistsQueryValidator : AbstractValidator<Searc
             .WithMessage("Search query must not exceed 100 characters");
     }
 }
+/// <summary>
+/// Validator for GetArtistTopTracksQuery.
+/// </summary>
+public sealed class GetArtistTopTracksQueryValidator : AbstractValidator<GetArtistTopTracksQuery>
+{
+    public GetArtistTopTracksQueryValidator()
+    {
+        RuleFor(x => x.ArtistId)
+            .NotEmpty()
+            .WithMessage("Spotify artist ID is required")
+            .Length(22)
+            .WithMessage("Spotify ID must be exactly 22 characters")
+            .Matches("^[a-zA-Z0-9]+$")
+            .WithMessage("Spotify ID must contain only alphanumeric characters");
+
+        RuleFor(x => x.Limit)
+            .InclusiveBetween(1, 10)
+            .WithMessage("Limit must be between 1 and 10");
+    }
+}

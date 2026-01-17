@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("YTapi.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+11126e746afe169a69c5676542701a277a1d2343")]
 [assembly: System.Reflection.AssemblyProductAttribute("YTapi.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("YTapi.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

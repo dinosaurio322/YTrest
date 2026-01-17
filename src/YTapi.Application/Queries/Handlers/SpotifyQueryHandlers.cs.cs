@@ -332,3 +332,65 @@ public sealed class SearchSpotifyArtistsQueryHandler
         return Result<IReadOnlyList<SpotifyArtistResponse>>.Success(responses);
     }
 }
+
+/// <summary>
+/// Handler for getting an artist's top tracks.
+/// </summary>
+public sealed class GetArtistTopTracksQueryHandler 
+    : IRequestHandler<GetArtistTopTracksQuery, Result<IReadOnlyList<SpotifyTrackResponse>>>
+{
+    private readonly ISpotifyService _spotifyService;
+    private readonly ILogger<GetArtistTopTracksQueryHandler> _logger;
+
+    public GetArtistTopTracksQueryHandler(
+        ISpotifyService spotifyService,
+        ILogger<GetArtistTopTracksQueryHandler> logger)
+    {
+        _spotifyService = spotifyService;
+        _logger = logger;
+    }
+
+    public async Task<Result<IReadOnlyList<SpotifyTrackResponse>>> Handle(
+        GetArtistTopTracksQuery request,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation(
+            "Getting top {Limit} tracks for artist: {ArtistId}", 
+            request.Limit, 
+            request.ArtistId);
+
+        var result = await _spotifyService.GetArtistTopTracksAsync(
+            request.ArtistId, 
+            request.Limit, 
+            cancellationToken);
+
+        if (result.IsFailure)
+        {
+            _logger.LogWarning(
+                "Failed to retrieve top tracks for artist {ArtistId}: {Error}",
+                request.ArtistId,
+                result.Error!.Message);
+            
+            return Result<IReadOnlyList<SpotifyTrackResponse>>.Failure(result.Error);
+        }
+
+        var tracks = result.Value!;
+        var responses = tracks.Select(t => new SpotifyTrackResponse
+        {
+            Id = t.Id,
+            Name = t.Name,
+            DurationMs = t.DurationMs,
+            PreviewUrl = t.PreviewUrl,
+            Album = t.Album,
+            CoverUrl = t.CoverUrl,
+            Artists = t.Artists
+        }).ToList().AsReadOnly();
+
+        _logger.LogInformation(
+            "Found {Count} top tracks for artist {ArtistId}", 
+            responses.Count, 
+            request.ArtistId);
+
+        return Result<IReadOnlyList<SpotifyTrackResponse>>.Success(responses);
+    }
+}

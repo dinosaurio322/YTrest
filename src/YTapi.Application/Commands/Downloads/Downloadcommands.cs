@@ -11,3 +11,6 @@ public sealed record DownloadTrackCommand(string SpotifyId)
 
 public sealed record DownloadAlbumCommand(string SpotifyId) 
     : IRequest<Result<DownloadJobResponse>>;
+
+public sealed record DownloadArtistCommand(string SpotifyId) 
+    : IRequest<Result<DownloadJobResponse>>;

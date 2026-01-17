@@ -117,7 +117,38 @@ public class SpotifyController : ControllerBase
 
         return Ok(result.Value);
     }
+    /// <summary>
+    /// Get an artist's top tracks.
+    /// </summary>
+    /// <param name="id">Spotify artist ID</param>
+    /// <param name="limit">Number of tracks to return (max 10)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of top tracks</returns>
+    /// <response code="200">Top tracks retrieved successfully</response>
+    /// <response code="404">Artist not found</response>
+    [HttpGet("artists/{id}/top-tracks")]
+    [ProducesResponseType(typeof(IReadOnlyList<SpotifyTrackResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetArtistTopTracks(
+        string id,
+        [FromQuery] int limit = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetArtistTopTracksQuery(id, Math.Clamp(limit, 1, 10));
+        var result = await _mediator.Send(query, cancellationToken);
 
+        if (result.IsFailure)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Artist Top Tracks Not Found",
+                Detail = result.Error!.Message,
+                Status = StatusCodes.Status404NotFound
+            });
+        }
+
+        return Ok(result.Value);
+    }
     /// <summary>
     /// Search for tracks on Spotify.
     /// </summary>
@@ -240,4 +271,6 @@ public class SpotifyController : ControllerBase
 
         return Ok(result.Value);
     }
+
+
 }

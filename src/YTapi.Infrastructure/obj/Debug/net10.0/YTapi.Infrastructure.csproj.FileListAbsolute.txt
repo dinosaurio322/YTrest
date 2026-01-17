@@ -15,3 +15,4 @@
 /Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Infrastructure/obj/Debug/net10.0/refint/YTapi.Infrastructure.dll
 /Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Infrastructure/obj/Debug/net10.0/YTapi.Infrastructure.pdb
 /Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Infrastructure/obj/Debug/net10.0/ref/YTapi.Infrastructure.dll
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Infrastructure/obj/Debug/net10.0/YTapi.Infrastructure.sourcelink.json

@@ -13,3 +13,4 @@
 /Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/refint/YTapi.Application.dll
 /Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/YTapi.Application.pdb
 /Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/ref/YTapi.Application.dll
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/YTapi.Application.sourcelink.json

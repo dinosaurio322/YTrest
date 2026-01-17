@@ -36,7 +36,7 @@ public sealed class SpotifyService : ISpotifyService
         try
         {
             var track = await _clientFactory.Client.Tracks.Get(id);
-            
+
             if (track is null)
             {
                 return Result<SpotifyTrack>.Failure(
@@ -73,7 +73,7 @@ public sealed class SpotifyService : ISpotifyService
         try
         {
             var album = await _clientFactory.Client.Albums.Get(id);
-            
+
             if (album is null)
             {
                 return Result<SpotifyAlbum>.Failure(
@@ -110,7 +110,7 @@ public sealed class SpotifyService : ISpotifyService
         try
         {
             var artist = await _clientFactory.Client.Artists.Get(id);
-            
+
             if (artist is null)
             {
                 return Result<SpotifyArtist>.Failure(
@@ -226,7 +226,46 @@ public sealed class SpotifyService : ISpotifyService
                 Error.Failure("Spotify.SearchError", "An error occurred while searching for artists"));
         }
     }
+    public async Task<Result<IReadOnlyList<SpotifyTrack>>> GetArtistTopTracksAsync(
+        string artistId,
+        int limit = 10,
+        CancellationToken cancellationToken = default)
+    {
+         
+        try
+        {
+            var topTracks = await _clientFactory.Client.Artists.GetTopTracks(
+                artistId,
+                new ArtistsTopTracksRequest("US"));
 
+            if (topTracks?.Tracks == null || !topTracks.Tracks.Any())
+            {
+                _logger.LogWarning("No top tracks found for artist: {ArtistId}", artistId);
+                return Result<IReadOnlyList<SpotifyTrack>>.Success(
+                    Array.Empty<SpotifyTrack>().ToList().AsReadOnly());
+            }
+
+            var tracks = topTracks.Tracks
+                .Take(Math.Min(limit, 10))
+                .Select(MapToSpotifyTrack)
+                .ToList()
+                .AsReadOnly();
+
+            _logger.LogInformation(
+                "Retrieved {Count} top tracks for artist: {ArtistId}",
+                tracks.Count,
+                artistId);
+
+            return Result<IReadOnlyList<SpotifyTrack>>.Success(tracks);
+        }
+
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting top tracks for artist: {ArtistId}", artistId);
+            return Result<IReadOnlyList<SpotifyTrack>>.Failure(
+                Error.Failure("Spotify.Error", "An error occurred while retrieving artist top tracks"));
+        }
+    }
     private static SpotifyTrack MapToSpotifyTrack(FullTrack track)
     {
         var coverUrl = track.Album?.Images?

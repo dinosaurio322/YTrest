@@ -15,6 +15,10 @@ public interface ISpotifyService
     Task<Result<IReadOnlyList<SpotifyTrack>>> SearchTracksAsync(string query, CancellationToken cancellationToken = default);
     Task<Result<IReadOnlyList<SpotifyAlbum>>> SearchAlbumsAsync(string query, CancellationToken cancellationToken = default);
     Task<Result<IReadOnlyList<SpotifyArtist>>> SearchArtistsAsync(string query, CancellationToken cancellationToken = default);
+    Task<Result<IReadOnlyList<SpotifyTrack>>> GetArtistTopTracksAsync(
+        string artistId, 
+        int limit = 10, 
+        CancellationToken cancellationToken = default);
 }
  
   

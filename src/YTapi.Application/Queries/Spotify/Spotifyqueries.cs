@@ -21,3 +21,6 @@ public sealed record SearchSpotifyAlbumsQuery(string Query)
 
 public sealed record SearchSpotifyArtistsQuery(string Query) 
     : IRequest<Result<IReadOnlyList<SpotifyArtistResponse>>>;
+
+public sealed record GetArtistTopTracksQuery(string ArtistId, int Limit = 10) 
+    : IRequest<Result<IReadOnlyList<SpotifyTrackResponse>>>;
