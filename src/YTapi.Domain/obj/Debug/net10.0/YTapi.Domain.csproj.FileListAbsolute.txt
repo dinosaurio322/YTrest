@@ -1,0 +1,12 @@
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Domain/bin/Debug/net10.0/YTapi.Domain.deps.json
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Domain/bin/Debug/net10.0/YTapi.Domain.dll
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Domain/bin/Debug/net10.0/YTapi.Domain.pdb
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Domain/obj/Debug/net10.0/YTapi.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Domain/obj/Debug/net10.0/YTapi.Domain.AssemblyInfoInputs.cache
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Domain/obj/Debug/net10.0/YTapi.Domain.AssemblyInfo.cs
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Domain/obj/Debug/net10.0/YTapi.Domain.csproj.CoreCompileInputs.cache
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Domain/obj/Debug/net10.0/YTapi.Domain.dll
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Domain/obj/Debug/net10.0/refint/YTapi.Domain.dll
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Domain/obj/Debug/net10.0/YTapi.Domain.pdb
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Domain/obj/Debug/net10.0/ref/YTapi.Domain.dll
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Domain/obj/Debug/net10.0/YTapi.Domain.sourcelink.json

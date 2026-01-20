@@ -1,0 +1,16 @@
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/YTapi.Application.csproj.AssemblyReference.cache
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/YTapi.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/YTapi.Application.AssemblyInfoInputs.cache
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/YTapi.Application.AssemblyInfo.cs
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/YTapi.Application.csproj.CoreCompileInputs.cache
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/bin/Debug/net10.0/YTapi.Application.deps.json
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/bin/Debug/net10.0/YTapi.Application.dll
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/bin/Debug/net10.0/YTapi.Application.pdb
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/bin/Debug/net10.0/YTapi.Domain.dll
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/bin/Debug/net10.0/YTapi.Domain.pdb
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/YTapi.Ap.428DFE97.Up2Date
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/YTapi.Application.dll
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/refint/YTapi.Application.dll
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/YTapi.Application.pdb
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/ref/YTapi.Application.dll
+/Users/octaviogomez/Documents/Programacion/YTrest/src/YTapi.Application/obj/Debug/net10.0/YTapi.Application.sourcelink.json

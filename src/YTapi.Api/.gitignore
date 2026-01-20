@@ -1,0 +1,54 @@
+# .NET
+bin/
+obj/
+out/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+[Ll]ogs/
+
+# Visual Studio / Rider
+.vs/
+.vscode/
+.idea/
+*.swp
+*~
+
+# Secrets - IMPORTANTE
+appsettings.Development.json
+*.pfx
+*.p12
+secrets.json
+.env
+.env.local
+.env.production
+
+# Logs
+logs/
+*.log
+
+# Audio files
+*.mp3
+*.mp4
+*.webm
+*.m4a
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Dependencies
+node_modules/
+packages/

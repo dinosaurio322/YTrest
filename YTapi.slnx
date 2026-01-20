@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/YTapi.Api/YTapi.Api.csproj" />
+    <Project Path="src/YTapi.Application/YTapi.Application.csproj" />
+    <Project Path="src/YTapi.Domain/YTapi.Domain.csproj" />
+    <Project Path="src/YTapi.Infrastructure/YTapi.Infrastructure.csproj" />
+  </Folder>
+</Solution>
