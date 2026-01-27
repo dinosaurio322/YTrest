@@ -1,0 +1,11 @@
+# User secrets
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+
+# Logs
+logs/
+
+# Build
+bin/
+obj/

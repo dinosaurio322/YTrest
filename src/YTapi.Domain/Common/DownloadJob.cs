@@ -13,10 +13,12 @@ public sealed class DownloadJob : Entity
 
     private DownloadJob(
         SpotifyItemType itemType,
-        IEnumerable<SpotifyTrack> tracks) : base()
+        IEnumerable<SpotifyTrack> tracks,
+        long chatId) : base()
     {
         ItemType = itemType;
         _tracks.AddRange(tracks);
+        ChatId = chatId;
         Status = DownloadStatus.Pending;
         Progress = 0;
         CreatedAt = DateTime.UtcNow;
@@ -24,6 +26,7 @@ public sealed class DownloadJob : Entity
 
     public SpotifyItemType ItemType { get; private set; }
     public IReadOnlyList<SpotifyTrack> Tracks => _tracks.AsReadOnly();
+    public long ChatId { get; private set; }
     public DownloadStatus Status { get; private set; }
     public double Progress { get; private set; }
     public string? CurrentTrackName { get; private set; }
@@ -31,16 +34,20 @@ public sealed class DownloadJob : Entity
     public DateTime CreatedAt { get; private init; }
     public DateTime? CompletedAt { get; private set; }
     public string? ErrorMessage { get; private set; }
+    public int? ProgressMessageId { get; private set; }
+
+    public void SetProgressMessageId(int messageId) => ProgressMessageId = messageId;
 
     public static Result<DownloadJob> Create(
         SpotifyItemType itemType,
-        IEnumerable<SpotifyTrack> tracks)
+        IEnumerable<SpotifyTrack> tracks,
+        long chatId = 0)
     {
         if (!tracks.Any())
             return Result<DownloadJob>.Failure(
                 Error.Validation("DownloadJob.NoTracks", "At least one track is required."));
 
-        var job = new DownloadJob(itemType, tracks);
+        var job = new DownloadJob(itemType, tracks, chatId);
         return Result<DownloadJob>.Success(job);
     }
 
