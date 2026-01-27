@@ -1,5 +1,4 @@
 using System.IO.Compression;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using YTapi.Application.DTOs.Responses;
@@ -9,7 +8,6 @@ using YTapi.Domain.Entities;
 using YTapi.Domain.Enums;
 using YTapi.Domain.ValueObjects;
 using YTapi.Infrastructure.Configuration;
-using YTapi.Infrastructure.Hubs;
 
 namespace YTapi.Infrastructure.BackgroundJobs;
 
@@ -21,20 +19,20 @@ public sealed class DownloadProcessor : IDownloadProcessor
 {
     private readonly IYoutubeAudioDownloader _youtubeDownloader;
     private readonly IDownloadJobStore _jobStore;
-    private readonly IHubContext<DownloadHub> _hubContext;
+    private readonly IProgressNotifier _progressNotifier;
     private readonly ILogger<DownloadProcessor> _logger;
     private readonly DownloadSettings _downloadSettings;
 
     public DownloadProcessor(
         IYoutubeAudioDownloader youtubeDownloader,
         IDownloadJobStore jobStore,
-        IHubContext<DownloadHub> hubContext,
+        IProgressNotifier progressNotifier,
         ILogger<DownloadProcessor> logger,
         IOptions<DownloadSettings> downloadSettings)
     {
         _youtubeDownloader = youtubeDownloader;
         _jobStore = jobStore;
-        _hubContext = hubContext;
+        _progressNotifier = progressNotifier;
         _logger = logger;
         _downloadSettings = downloadSettings.Value;
     }
@@ -59,7 +57,7 @@ public sealed class DownloadProcessor : IDownloadProcessor
 
         job.StartProcessing();
         await _jobStore.UpdateAsync(job, cancellationToken);
-        await ReportProgressAsync(jobId, "Processing started", 0);
+        await ReportProgressAsync(job, "Processing started", 0, cancellationToken);
 
         try
         {
@@ -80,7 +78,24 @@ public sealed class DownloadProcessor : IDownloadProcessor
             // Mark as completed
             job.Complete();
             await _jobStore.UpdateAsync(job, cancellationToken);
-            await ReportProgressAsync(jobId, "Completed", 100);
+
+            // Send file to user
+            var fileName = job.Tracks.Count == 1
+                ? $"{SanitizeFileName(job.Tracks[0].Name)}.mp3"
+                : $"{job.ItemType}_{jobId:N}.zip";
+
+            var caption = job.Tracks.Count == 1
+                ? $"*{job.Tracks[0].Name}*\n{string.Join(", ", job.Tracks[0].Artists)}"
+                : $"*{job.ItemType}*\n{job.Tracks.Count} tracks";
+
+            resultStream.Position = 0;
+            await _progressNotifier.SendFileAsync(
+                jobId,
+                job.ChatId,
+                resultStream,
+                fileName,
+                caption,
+                cancellationToken);
 
             _logger.LogInformation("Job {JobId} completed successfully", jobId);
         }
@@ -89,14 +104,14 @@ public sealed class DownloadProcessor : IDownloadProcessor
             _logger.LogWarning("Job {JobId} was cancelled", jobId);
             job.Fail("Job was cancelled");
             await _jobStore.UpdateAsync(job, cancellationToken);
-            await ReportProgressAsync(jobId, "Cancelled", job.Progress);
+            await _progressNotifier.SendErrorAsync(jobId, job.ChatId, "Download was cancelled", cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing job {JobId}", jobId);
             job.Fail(ex.Message);
             await _jobStore.UpdateAsync(job, cancellationToken);
-            await ReportProgressAsync(jobId, $"Failed: {ex.Message}", job.Progress);
+            await _progressNotifier.SendErrorAsync(jobId, job.ChatId, ex.Message, cancellationToken);
         }
     }
 
@@ -104,7 +119,7 @@ public sealed class DownloadProcessor : IDownloadProcessor
     /// Processes a single track download.
     /// </summary>
     private async Task<Stream> ProcessSingleTrackAsync(
-        Domain.Entities.DownloadJob job,
+        DownloadJob job,
         CancellationToken cancellationToken)
     {
         var track = job.Tracks.First();
@@ -119,7 +134,7 @@ public sealed class DownloadProcessor : IDownloadProcessor
         {
             job.UpdateProgress(p, track.Name);
             await _jobStore.UpdateAsync(job, cancellationToken);
-            await ReportProgressAsync(job.Id, $"Downloading: {track.Name}", p);
+            await ReportProgressAsync(job, $"Downloading: {track.Name}", p, cancellationToken);
         });
 
         var result = await _youtubeDownloader.DownloadAsync(query, track, progress, cancellationToken);
@@ -137,13 +152,12 @@ public sealed class DownloadProcessor : IDownloadProcessor
 
     /// <summary>
     /// Processes multiple tracks and creates a ZIP archive.
-    /// NOW WITH CONCURRENT DOWNLOADS - downloads multiple tracks in parallel.
+    /// Downloads multiple tracks in parallel.
     /// </summary>
     private async Task<Stream> ProcessMultipleTracksAsync(
-        Domain.Entities.DownloadJob job,
+        DownloadJob job,
         CancellationToken cancellationToken)
     {
-        // Get concurrency setting from configuration
         var maxConcurrentDownloads = _downloadSettings.MaxParallelJobs;
 
         _logger.LogInformation(
@@ -154,14 +168,14 @@ public sealed class DownloadProcessor : IDownloadProcessor
 
         // Download all tracks concurrently
         var downloadedTracks = await DownloadTracksConcurrentlyAsync(
-            job, 
-            maxConcurrentDownloads, 
+            job,
+            maxConcurrentDownloads,
             cancellationToken);
 
         // Create ZIP from downloaded tracks
         var zipStream = await CreateZipFromDownloadedTracksAsync(
-            job, 
-            downloadedTracks, 
+            job,
+            downloadedTracks,
             cancellationToken);
 
         zipStream.Position = 0;
@@ -171,16 +185,15 @@ public sealed class DownloadProcessor : IDownloadProcessor
     /// <summary>
     /// Downloads all tracks concurrently with configurable parallelism.
     /// </summary>
-    private async Task<List<(int TrackNumber, SpotifyTrack Track, Stream? AudioStream, bool Success, string? Error)>> 
+    private async Task<List<(int TrackNumber, SpotifyTrack Track, Stream? AudioStream, bool Success, string? Error)>>
         DownloadTracksConcurrentlyAsync(
-            Domain.Entities.DownloadJob job,
+            DownloadJob job,
             int maxConcurrentDownloads,
             CancellationToken cancellationToken)
     {
         var semaphore = new SemaphoreSlim(maxConcurrentDownloads, maxConcurrentDownloads);
         var downloadTasks = new List<Task<(int, SpotifyTrack, Stream?, bool, string?)>>();
 
-        // Create download task for each track
         for (int i = 0; i < job.Tracks.Count; i++)
         {
             var trackNumber = i + 1;
@@ -198,7 +211,6 @@ public sealed class DownloadProcessor : IDownloadProcessor
             downloadTasks.Add(downloadTask);
         }
 
-        // Wait for all downloads to complete
         var results = await Task.WhenAll(downloadTasks);
 
         var successCount = results.Count(r => r.Item4);
@@ -213,7 +225,7 @@ public sealed class DownloadProcessor : IDownloadProcessor
     /// <summary>
     /// Downloads a single track with semaphore control for concurrency limiting.
     /// </summary>
-    private async Task<(int TrackNumber, SpotifyTrack Track, Stream? AudioStream, bool Success, string? Error)> 
+    private async Task<(int TrackNumber, SpotifyTrack Track, Stream? AudioStream, bool Success, string? Error)>
         DownloadSingleTrackAsync(
             DownloadJob job,
             SpotifyTrack track,
@@ -232,26 +244,24 @@ public sealed class DownloadProcessor : IDownloadProcessor
                 job.Tracks.Count,
                 track.Name);
 
-            // Update progress (thread-safe since job.UpdateProgress should be)
             var currentProgress = (double)trackIndex / job.Tracks.Count * 100;
             job.UpdateProgress(currentProgress, track.Name);
             await _jobStore.UpdateAsync(job, cancellationToken);
-            
+
             if (_downloadSettings.EnableDetailedProgress)
             {
                 await ReportProgressAsync(
-                    job.Id,
+                    job,
                     $"Downloading: {track.Name} ({trackNumber}/{job.Tracks.Count})",
-                    job.Progress);
+                    job.Progress,
+                    cancellationToken);
             }
 
-            // Delay between downloads to prevent rate limiting
             if (_downloadSettings.MinDelayBetweenDownloads > 0 && trackIndex > 0)
             {
                 await Task.Delay(_downloadSettings.MinDelayBetweenDownloads, cancellationToken);
             }
 
-            // Download track with retry logic
             var result = await DownloadWithRetryAsync(track, trackNumber, trackIndex, job, cancellationToken);
 
             if (result.IsFailure)
@@ -260,7 +270,7 @@ public sealed class DownloadProcessor : IDownloadProcessor
                     "Failed to download track {TrackName}: {Error}",
                     track.Name,
                     result.Error!.Message);
-                
+
                 return (trackNumber, track, null, false, result.Error.Message);
             }
 
@@ -295,7 +305,7 @@ public sealed class DownloadProcessor : IDownloadProcessor
         SpotifyTrack track,
         int trackNumber,
         int trackIndex,
-        Domain.Entities.DownloadJob job,
+        DownloadJob job,
         CancellationToken cancellationToken)
     {
         var query = track.GetSearchQuery();
@@ -326,17 +336,16 @@ public sealed class DownloadProcessor : IDownloadProcessor
                     await _jobStore.UpdateAsync(job, cancellationToken);
                 });
 
-                // Create timeout token
                 timeoutCts = new CancellationTokenSource(
                     TimeSpan.FromSeconds(_downloadSettings.DownloadTimeoutSeconds));
                 linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken, 
+                    cancellationToken,
                     timeoutCts.Token);
 
                 var result = await _youtubeDownloader.DownloadAsync(
-                    query, 
-                    track, 
-                    progress, 
+                    query,
+                    track,
+                    progress,
                     linkedCts.Token);
 
                 if (result.IsSuccess)
@@ -351,7 +360,6 @@ public sealed class DownloadProcessor : IDownloadProcessor
                     return result;
                 }
 
-                // If it's the last attempt, return the failure
                 if (attempt == maxAttempts)
                 {
                     return result;
@@ -390,13 +398,11 @@ public sealed class DownloadProcessor : IDownloadProcessor
             }
             finally
             {
-                // Dispose of cancellation tokens
                 linkedCts?.Dispose();
                 timeoutCts?.Dispose();
             }
         }
 
-        // Should not reach here, but just in case
         return Result<Stream>.Failure(Error.Failure(
             "Download.Failed",
             "Download failed after all retry attempts"));
@@ -406,7 +412,7 @@ public sealed class DownloadProcessor : IDownloadProcessor
     /// Creates ZIP archive from downloaded tracks (successful ones).
     /// </summary>
     private async Task<MemoryStream> CreateZipFromDownloadedTracksAsync(
-        Domain.Entities.DownloadJob job,
+        DownloadJob job,
         List<(int TrackNumber, SpotifyTrack Track, Stream? AudioStream, bool Success, string? Error)> downloadedTracks,
         CancellationToken cancellationToken)
     {
@@ -414,7 +420,6 @@ public sealed class DownloadProcessor : IDownloadProcessor
 
         using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
         {
-            // Add successful tracks to ZIP (in order)
             var successfulTracks = downloadedTracks
                 .Where(t => t.Success && t.AudioStream != null)
                 .OrderBy(t => t.TrackNumber)
@@ -440,7 +445,6 @@ public sealed class DownloadProcessor : IDownloadProcessor
                     job.Tracks.Count);
             }
 
-            // Add error report if there were failures
             var failedTracks = downloadedTracks
                 .Where(t => !t.Success)
                 .OrderBy(t => t.TrackNumber)
@@ -450,10 +454,10 @@ public sealed class DownloadProcessor : IDownloadProcessor
             {
                 var errorReport = GenerateErrorReport(failedTracks);
                 var errorEntry = zip.CreateEntry("DOWNLOAD_ERRORS.txt");
-                
+
                 using var errorWriter = new StreamWriter(errorEntry.Open());
                 await errorWriter.WriteAsync(errorReport);
-                
+
                 _logger.LogWarning(
                     "Added error report to ZIP: {FailedCount} tracks failed",
                     failedTracks.Count);
@@ -480,7 +484,7 @@ public sealed class DownloadProcessor : IDownloadProcessor
         foreach (var (trackNumber, track, _, _, error) in failedTracks)
         {
             report.AppendLine($"Track #{trackNumber:D2}: {track.Name}");
-            report.AppendLine($"  Artist: {track.Artists}");
+            report.AppendLine($"  Artist: {string.Join(", ", track.Artists)}");
             report.AppendLine($"  Error: {error ?? "Unknown error"}");
             report.AppendLine();
         }
@@ -489,23 +493,26 @@ public sealed class DownloadProcessor : IDownloadProcessor
     }
 
     /// <summary>
-    /// Reports progress to connected clients via SignalR.
+    /// Reports progress to the user.
     /// </summary>
-    private async Task ReportProgressAsync(Guid jobId, string status, double percentage)
+    private async Task ReportProgressAsync(
+        DownloadJob job,
+        string status,
+        double percentage,
+        CancellationToken cancellationToken)
     {
         try
         {
-            await _hubContext.Clients.Group(jobId.ToString())
-                .SendAsync("progress", new DownloadProgressDto
-                {
-                    JobId = jobId,
-                    Status = status,
-                    Percentage = Math.Round(percentage, 2)
-                });
+            await _progressNotifier.ReportProgressAsync(
+                job.Id,
+                job.ChatId,
+                status,
+                percentage,
+                cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to send progress update for job {JobId}", jobId);
+            _logger.LogWarning(ex, "Failed to send progress update for job {JobId}", job.Id);
         }
     }
 

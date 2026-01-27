@@ -83,7 +83,10 @@ public sealed class DownloadArtistCommandHandler
             }
 
             // Crear download job
-            var jobResult = DownloadJob.Create(SpotifyItemType.Artist, topTracks.ToList());
+            var jobResult = DownloadJob.Create(
+                SpotifyItemType.Artist,
+                topTracks.ToList(),
+                request.ChatId);
 
             if (jobResult.IsFailure)
             {
@@ -91,6 +94,11 @@ public sealed class DownloadArtistCommandHandler
             }
 
             var job = jobResult.Value!;
+
+            if (request.MessageId.HasValue)
+            {
+                job.SetProgressMessageId(request.MessageId.Value);
+            }
 
             // Guardar job y encolar
             await _jobStore.SaveAsync(job, cancellationToken);

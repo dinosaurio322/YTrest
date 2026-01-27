@@ -64,7 +64,10 @@ public sealed class DownloadAlbumCommandHandler
             }
 
             // Create download job
-            var jobResult = DownloadJob.Create(SpotifyItemType.Album, album.Tracks);
+            var jobResult = DownloadJob.Create(
+                SpotifyItemType.Album,
+                album.Tracks,
+                request.ChatId);
 
             if (jobResult.IsFailure)
             {
@@ -72,6 +75,11 @@ public sealed class DownloadAlbumCommandHandler
             }
 
             var job = jobResult.Value!;
+
+            if (request.MessageId.HasValue)
+            {
+                job.SetProgressMessageId(request.MessageId.Value);
+            }
 
             // Save job and enqueue
             await _jobStore.SaveAsync(job, cancellationToken);
